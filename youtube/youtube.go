@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"regexp"
+	"time"
 )
 
 type Response struct {
@@ -42,16 +42,11 @@ type PageInfo struct {
 	ResultsPerPage int64 `json:"resultsPerPage"`
 }
 
-func durationStringToNumber(duration string) int {
-	log.Fatal(duration)
-	return 0
-}
-
 func getIdFromText(text string) (string, error) {
-	reg := regexp.MustCompile(`^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$`)
+	reg := regexp.MustCompile(`((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?`)
 
 	result := reg.FindStringSubmatch(text)
-	if len(result) > 5 {
+	if len(result) <= 5 {
 		return "", errors.New("no youtube url in text")
 	}
 	value := result[5]
@@ -78,4 +73,21 @@ func getVideoDurationString(videoId string) (string, error) {
 		return "", err
 	}
 	return parced.Items[0].ContentDetails.Duration, nil
+}
+
+func GetVideoDuration(text string) (time.Duration, error) {
+	id, err := getIdFromText(text)
+	if err != nil {
+		return 0, err
+	}
+	durationString, err := getVideoDurationString(id)
+	if err != nil {
+		return 0, err
+	}
+
+	duration, err := parceIso(durationString)
+	if err != nil {
+		return 0, err
+	}
+	return duration, nil
 }
