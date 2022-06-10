@@ -3,8 +3,8 @@ package auth
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -37,7 +37,7 @@ type TokenValidationResponse struct {
 	ExpiresIn int64    `json:"expires_in"`
 }
 
-func IsTokenValid(token_type, token string) (info TokenValidationResponse, ok bool) {
+func Validate(token_type, token string) (TokenValidationResponse, error) {
 	client := &http.Client{}
 	req, _ := http.NewRequest("GET", "https://id.twitch.tv/oauth2/validate", nil)
 
@@ -46,15 +46,15 @@ func IsTokenValid(token_type, token string) (info TokenValidationResponse, ok bo
 	resp, err := client.Do(req)
 	data := TokenValidationResponse{}
 	if err != nil {
-		return data, false
+		return data, err
 	}
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	resp.Body.Close()
 	if err != nil {
-		return data, false
+		return data, err
 	}
 
-	return data, resp.StatusCode == 200
+	return data, nil
 }
 
 type AuthResult struct {
@@ -64,7 +64,7 @@ type AuthResult struct {
 	TokenType   string   `schema:"token_type"`
 }
 
-func GetToken(client_id string, scopes []string) (AuthResult, bool) {
+func GetToken(client_id string, scopes []string) (AuthResult, error) {
 	redirect_path := "/redirect"
 	redirect_uri := "http://localhost" + port + redirect_path
 	auth_path := "/auth"
@@ -78,17 +78,17 @@ func GetToken(client_id string, scopes []string) (AuthResult, bool) {
 	}
 
 	result := AuthResult{}
-	ok := true
+	var returnError error = nil
 	http.HandleFunc(auth_path, func(w http.ResponseWriter, r *http.Request) {
 		go func() {
 			if err := server.Shutdown(context.Background()); err != nil {
-				log.Fatal(err)
+				returnError = err
 			}
 		}()
 		decoder := schema.NewDecoder()
 		err := decoder.Decode(&result, r.URL.Query())
 		if err != nil {
-			ok = false
+			returnError = err
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write([]byte(`<script>
@@ -109,10 +109,10 @@ func GetToken(client_id string, scopes []string) (AuthResult, bool) {
 	if result.TokenType == "oauth" {
 		result.TokenType = "OAuth"
 	}
-	return result, ok
+	return result, returnError
 }
 
-func RevokeToken(client_id, token string) bool {
+func RevokeToken(client_id, token string) error {
 	resp, err := http.Post("https://id.twitch.tv/oauth2/revoke",
 		"application/x-www-form-urlencoded",
 		strings.NewReader(
@@ -120,8 +120,11 @@ func RevokeToken(client_id, token string) bool {
 				"client_id=%s&token=%s",
 				client_id, token)))
 
-	if err != nil || resp.StatusCode != 200 {
-		return false
+	if err != nil {
+		return err
 	}
-	return true
+	if resp.StatusCode != 200 {
+		return errors.New("wrong token")
+	}
+	return nil
 }

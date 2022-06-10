@@ -5,10 +5,10 @@ import (
 	"testing"
 )
 
-func TestIsTokenValid(t *testing.T) {
+func TestValidate(t *testing.T) {
 
 	// correct Token
-	info, ok := IsTokenValid("Bearer", "m7zd25h4pkv9iwss81t4m8hyh24moo")
+	info, err := Validate("Bearer", "m7zd25h4pkv9iwss81t4m8hyh24moo")
 	correctInfo := TokenValidationResponse{
 		ClientID: "gp762nuuoqcoxypju8c569th9wz7q5",
 		Login:    "andrewkraevskii",
@@ -18,17 +18,17 @@ func TestIsTokenValid(t *testing.T) {
 		UserID:    "278168317",
 		ExpiresIn: 0,
 	}
-	if !ok {
-		t.Error("Expected true, got", ok)
+	if err != nil {
+		t.Error("Expected true, got", err)
 	}
 	if !reflect.DeepEqual(correctInfo, info) {
 		t.Error("Expected", correctInfo, "got", info)
 	}
 
 	// wrong Token
-	_, ok = IsTokenValid("Bearer", "m7zd25h4pkv9iwss81t4m8hyh24mo1")
-	if ok {
-		t.Error("Expected false, got", ok)
+	_, err = Validate("Bearer", "m7zd25h4pkv9iwss81t4m8hyh24mo1")
+	if err != nil {
+		t.Error("Expected false, got", err)
 	}
 
 }
@@ -41,13 +41,13 @@ func TestGetToken(t *testing.T) {
 		"chat:edit",
 		"chat:read",
 	}
-	result, ok := GetToken(client_id, scopes)
+	result, err := GetToken(client_id, scopes)
 	t.Log(result)
-	if !ok {
+	if err != nil {
 		t.Error("Token getting failed")
 	}
-	info, ok := IsTokenValid(result.TokenType, result.AccessToken)
-	if !ok {
+	info, err := Validate(result.TokenType, result.AccessToken)
+	if err != nil {
 		t.Error("Get invalid token")
 		// f.Error(info)
 	}
@@ -60,14 +60,14 @@ func TestRevokeToken(t *testing.T) {
 	const client_id = "to0d2ggvuyjpadj2cdxxoxf0kw2flj"
 
 	result, _ := GetToken(client_id, []string{})
-	info, _ := IsTokenValid(result.TokenType, result.AccessToken)
-	
-	ok := RevokeToken(info.ClientID, result.AccessToken)
-	if !ok {
+	info, _ := Validate(result.TokenType, result.AccessToken)
+
+	err := RevokeToken(info.ClientID, result.AccessToken)
+	if err != nil {
 		t.Error("Fail deleting token")
 	}
-	_, ok = IsTokenValid(result.TokenType, result.AccessToken)
-	if ok {
+	_, err = Validate(result.TokenType, result.AccessToken)
+	if err != nil {
 		t.Error("Token wasn't deleted")
 	}
 }
