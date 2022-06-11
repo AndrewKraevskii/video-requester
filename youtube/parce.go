@@ -9,7 +9,7 @@ import (
 
 // ParseDuration parses an ISO 8601 string representing a duration,
 // and returns the resultant golang time.Duration instance.
-func parseDuration(isoDuration string) (time.Duration, error) {
+func ParseDuration(isoDuration string) (time.Duration, error) {
 	re := regexp.MustCompile(`^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:.\d+)?)S)?$`)
 	matches := re.FindStringSubmatch(isoDuration)
 	if matches == nil {
@@ -60,8 +60,4 @@ func parseDuration(isoDuration string) (time.Duration, error) {
 	goDuration := strconv.FormatFloat(seconds, 'f', -1, 32) + "s"
 	return time.ParseDuration(goDuration)
 
-}
-
-func parceIso(iso string) (time.Duration, error) {
-	return parseDuration(iso)
 }

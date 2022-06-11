@@ -2,24 +2,20 @@ package youtube
 
 import (
 	"testing"
-	"time"
 )
 
-func TestGetVideoDuration(t *testing.T) {
-	duration, err := GetVideoDuration("https://www.youtube.com/watch?v=UkgK8eUdpAo")
-	expect := 3*time.Minute + 40*time.Second
+func TestYoutube(t *testing.T) {
+	id, err := GetIdFromText("(`asdasfafhttps://www.youtube.com/watch?v=UkgK8eUdpAo asd")
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
-	if duration != expect {
-		t.Error("got", duration, "expected", expect)
-	}
-	duration, err = GetVideoDuration("my youtube link https://www.youtube.com/watch?v=khn0rV_Svlc https://www.youtube.com/watch?v=UkgK8eUdpAo")
-	expect = 30*time.Minute + 2*time.Second
+	video, err := FetchVideo(id)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
-	if duration != expect {
-		t.Error("got", duration, "expected", expect)
+	duration, err := ParseDuration(video.ContentDetails.Duration)
+	if err != nil {
+		t.Fatal(err)
 	}
+	t.Log(duration)
 }

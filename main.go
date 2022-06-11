@@ -6,7 +6,6 @@ import (
 
 	"github.com/AndrewKraevskii/video-requester/save"
 	"github.com/AndrewKraevskii/video-requester/twitch/auth"
-	"github.com/AndrewKraevskii/video-requester/twitch/reward"
 	chat "github.com/gempir/go-twitch-irc/v3"
 	pubsub "github.com/pajlada/go-twitch-pubsub"
 )
@@ -79,14 +78,35 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	rw, err := reward.NewClient(user, client_id)
-	_, err = rw.CreateCustomRewards("enabled", 1, "3.1415926")
+	// rw, err := reward.NewClient(user, client_id)
+	// _, err = rw.CreateCustomRewards("enabled", 1, "3.1415926")
 
-	// client, err := helix.NewClient(&helix.Options{
-	// 	ClientID:        client_id,
-	// 	UserAccessToken: user.Access_token,
+	client, err := helix.NewClient(&helix.Options{
+		ClientID:        client_id,
+		UserAccessToken: user.Access_token,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	res, err := client.UpdateCustomRewards(&helix.UpdateCustomRewardsParams{
+		Id:            "07a3eda6-35e5-496b-a333-c2089a08f151",
+		BroadcasterID: user.Id,
+		Title:         "updated",
+		Cost:          1,
+		Prompt:        "description changed",
+		IsEnabled:     false,
+	})
+
+	// res, err := client.CreateCustomReward(&helix.ChannelCustomRewardsParams{
+	// 	BroadcasterID: user.Id,
+	// 	Title:         "created",
+	// 	IsEnabled:     true,
+	// 	Cost:          1,
 	// })
-
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	log.Print(res)
 	// res, err := client.GetCustomRewards(&helix.GetCustomRewardsParams{
 	// 	BroadcasterID:         user.Id,
 	// 	OnlyManageableRewards: true,

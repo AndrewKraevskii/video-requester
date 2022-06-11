@@ -1,0 +1,1 @@
+GET https://youtube.googleapis.com/youtube/v3/videos?part=contentDetails&part=fileDetails&part=id&part=liveStreamingDetails&part=localizations&part=player&part=processingDetails&part=recordingDetails&part=snippet&part=statistics&part=status&part=suggestions&part=topicDetails&id=oBpXBV9bU0Q&key=AIzaSyBVSkJVDJ94CTrr6W4Evpr2ezuTb5TCxYQ
